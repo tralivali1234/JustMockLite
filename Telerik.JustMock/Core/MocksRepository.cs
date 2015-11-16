@@ -223,6 +223,13 @@ namespace Telerik.JustMock.Core
 
 		internal DynamicProxyInterceptor Interceptor { get; private set; }
 
+		internal bool DisableProfiler { get; set; }
+
+		private bool CanUseProfiler
+		{
+			get { return ProfilerInterceptor.IsProfilerAttached && !this.DisableProfiler; }
+		}
+
 		static readonly IMockFactory mockFactory;
 
 		static MocksRepository()
@@ -463,10 +470,10 @@ namespace Telerik.JustMock.Core
 				|| type.IsAbstract || type.IsInterface
 				|| !settings.MockConstructorCall
 				|| hasAdditionalProxyTypeAttributes
-				|| !ProfilerInterceptor.IsProfilerAttached
+				|| !this.CanUseProfiler
 				|| !ProfilerInterceptor.TypeSupportsInstrumentation(type);
 
-			var createTransparentProxy = MockingProxy.CanCreate(type) && !ProfilerInterceptor.IsProfilerAttached;
+			var createTransparentProxy = MockingProxy.CanCreate(type) && !this.CanUseProfiler;
 
 			Exception proxyFailure = null;
 			object instance = null;
@@ -491,7 +498,7 @@ namespace Telerik.JustMock.Core
 				if (hasAdditionalInterfaces)
 					throw new MockException(String.Format("Type '{0}' is not accessible for inheritance. Cannot create mock object implementing the specified additional interfaces.", type));
 
-				if (!ProfilerInterceptor.IsProfilerAttached && !createTransparentProxy)
+				if (!this.CanUseProfiler && !createTransparentProxy)
 					ProfilerInterceptor.ThrowElevatedMockingException(type);
 
 				if (settings.MockConstructorCall && type.IsValueType)
@@ -599,7 +606,7 @@ namespace Telerik.JustMock.Core
 		internal void InterceptStatics(Type type, IEnumerable<object> mixins, IEnumerable<IBehavior> supplementaryBehaviors,
 			IEnumerable<IBehavior> fallbackBehaviors, bool mockStaticConstructor)
 		{
-			if (!ProfilerInterceptor.IsProfilerAttached)
+			if (!this.CanUseProfiler)
 				ProfilerInterceptor.ThrowElevatedMockingException(type);
 
 			if (!fallbackBehaviors.OfType<CallOriginalBehavior>().Any())
@@ -923,7 +930,7 @@ namespace Telerik.JustMock.Core
 				if (!type.IsInterface && method.DeclaringType.IsAssignableFrom(type))
 				{
 					var concreteMethod = MockingUtil.GetConcreteImplementer(method, type);
-					if (!concreteMethod.IsInheritable() && !ProfilerInterceptor.IsProfilerAttached)
+					if (!concreteMethod.IsInheritable() && !this.CanUseProfiler)
 					{
 						var reimplementedInterfaceMethod = (MethodInfo)method.GetInheritanceChain().Last();
 						if (reimplementedInterfaceMethod.DeclaringType.IsInterface
@@ -1460,7 +1467,7 @@ namespace Telerik.JustMock.Core
 
 		private void CheckMethodInterceptorAvailable(IMatcher instanceMatcher, MethodBase method)
 		{
-			if (ProfilerInterceptor.IsProfilerAttached)
+			if (this.CanUseProfiler)
 				return;
 
 			var valueMatcher = instanceMatcher as IValueMatcher;
@@ -1479,7 +1486,7 @@ namespace Telerik.JustMock.Core
 
 		internal void EnableInterception(Type typeToIntercept)
 		{
-			if (ProfilerInterceptor.IsProfilerAttached)
+			if (this.CanUseProfiler)
 			{
 				for (var type = typeToIntercept; type != null; )
 				{
@@ -1672,7 +1679,7 @@ namespace Telerik.JustMock.Core
 			}
 
 			var sb = new StringBuilder();
-			sb.AppendFormat("Elevated mocking: {0}\n", ProfilerInterceptor.IsProfilerAttached ? "enabled" : "disabled");
+			sb.AppendFormat("Elevated mocking: {0}\n", this.CanUseProfiler ? "enabled" : "disabled");
 
 			sb.AppendLine("\nArrangements and expectations:");
 			bool addedStuff = false;

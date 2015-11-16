@@ -93,6 +93,11 @@ namespace Telerik.JustMock
 			ProfilerInterceptor.GuardInternal(() => MockingContext.RetireRepository());
 		}
 
+		public static void DoNotUseProfiler()
+		{
+			ProfilerInterceptor.GuardInternal(() => MockingContext.CurrentRepository.DisableProfiler = true);
+		}
+
 #if !LITE_EDITION
 		/// <summary>
 		/// Explicitly enables the interception of the given type by the profiler. Interception is usually enabled

@@ -47,6 +47,11 @@ namespace Telerik.JustMock.Core
 
 			lock (repo)
 			{
+				if (repo.DisableProfiler)
+				{
+					DebugView.TraceEvent(IndentLevel.DispatchResult, () => "Profiler interception in context is disabled.");
+					return false;
+				}
 				repo.DispatchInvocation(invocation);
 			}
 
