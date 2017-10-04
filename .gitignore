@@ -18,9 +18,15 @@ x64/
 
 *.jmconfig
 
+![Ss]ilverlightDistribution/Release
+![Ss]ilverlightDistribution/ReleaseFree
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+
+#NuGet packages
+packages
 
 *_i.c
 *_p.c
